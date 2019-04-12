@@ -538,8 +538,64 @@ sudo iptables-restore </etc/iptables.up.rules
 --------------------------------------------
 
 ### 12 选购申请免费的SSL证书
-* 厂商选择： 阿里云，腾讯云，七牛，又拍云
+* 厂商选择： 阿里云，腾讯云，七牛，又拍云；  
+* 申请免费证书；  
+* 手动DNS验证；  
+* 按照提示在DNSPod添加记录；
+* 等待证书颁发，下载证书；
+* 在本地上传证书的Nginx下的crt和key文件；
+```
+cd ~/Downloads/agileui.harryyin.cn/Nginx
 
+scp -P Port ./1_agileui.harryyin.cn_bundle.crt website_manager@47.92.102.129:/home/website_manager/
+
+scp -P Port ./2_agileui.harryyin.cn.key website_manager@47.92.102.129:/home/website_manager/
+```
+
+* 在服务器上，将这两个文件移动到/www/ssl；
+```
+mv 1_* ./ssl/
+mv 2_* ./ssl/
+
+mv ssl /www/
+```
+* 在申请ssl证书的地方找到证书安装方法里的Nginx部署；
+* 复制server配置（不包括location）；
+* 打开服务器上所选域名的nginx配置；
+```
+cd /etc/nginx/conf.d
+sudo vi agileui-harryyin-cn-3001.conf
+```
+* 修改配置；
+```
+server {
+  listen 80;
+  server_name agileui.harryyin.cn;
+  #rewrite ^(.*) https://$host$1 permanent;
+  return 301 https://agileui.harryyin.cn$request_uri;
+}
+
+server {
+  listen 443;
+  server_name agileui.harryyin.cn ; #填写绑定证书的域名
+  ssl on;
+  ssl_certificate /www/ssl/1_agileui.harryyin.cn_bundle.crt;
+  ssl_certificate_key /www/ssl/2_agileui.harryyin.cn.key;
+  ssl_session_timeout 5m;
+  ssl_protocols TLSv1 TLSv1.1 TLSv1.2; #按照这个协议配置
+  ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:HIGH:!aNULL:!MD5:!RC4:!DHE;#按照这个套件配置
+  if ($ssl_protocol = "") {
+    rewrite ^(.*) https://$host$1 permanent;
+  }
+  ssl_prefer_server_ciphers on;
+  location......
+```
+* 测试nginx配置，成功则重启nginx配置；
+```
+sudo nginx -t
+sudo nginx -s reload
+```
+* 完成，可以访问[agileui.harryyin.cn](http://agileui.harryyin.cn)自动切换到https协议。
 --------------------------------------------
 
 ## 网站内容更新流程
