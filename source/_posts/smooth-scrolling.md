@@ -6,8 +6,7 @@ tags:
 - scroll
 
 categories:
-- Javascript
-- Css
+- Algorithm
 
 ---
 

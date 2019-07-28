@@ -3,9 +3,10 @@ title: JS正则表达式学习笔记
 date: 2018-10-25 10:46:00
 tags:
 - regular expression
-- javascript
+
 categories:
-- Javascript
+- Algorithm
+
 ---
 
 ### RegExp对象

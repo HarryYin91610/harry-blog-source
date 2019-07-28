@@ -3,12 +3,10 @@ title: 完美的全屏背景视频展示
 date: 2018-11-30 15:45:00
 tags:
 - fullscreen
-- javascript
-- css
 
 categories:
-- Javascript
-- Css
+- Algorithm
+
 ---
 
 ### 背景
