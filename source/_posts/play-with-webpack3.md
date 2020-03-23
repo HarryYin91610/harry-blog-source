@@ -466,3 +466,81 @@ import('./text.js').then((Text) => {
   });
 })
 ```
+
+-----------------------------------------
+ 
+## eslint的使用
+
+ * 制定团队eslint规范，不重复造轮子，基于eslint:recommend配置并改进；
+ * 能够帮助发现代码错误的规则，全部开启；
+ * 帮助保持团队代码风格统一，而不是限制开发体验。
+
+### 方法一：webpack与CI/CD集成
+
+<img width="600px" height="auto" style="float: left;" src="./play-with-webpack3/lint-pipline.png">
+<div style="clear: both"></div>
+
+本地开发阶段增加 precommit 钩子
+
+安装husky
+```
+npm i -D husky
+```
+
+增加npm scripts，通过lint-staged增量检查修改的文件
+```
+{
+  "scripts": {
+    "precommit": "lint-staged"
+  },
+  "lint-staged": {
+    "linters": {
+      "*.{js,scss}": ["eslint-fix", "git add"]
+    }
+  }
+}
+```
+
+### 方法二：webpack与eslint集成
+
+适合新项目，不适合旧项目。
+
+安装eslint-loader
+```
+npm i -D eslint-loader
+```
+
+使用eslint-loader，构建时检查js规范
+```
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: [
+          "babel-loader",
+          "eslint-loader"
+        ]
+      }
+    ]
+  }
+}
+```
+
+配置eslintrc.js
+```
+module.exports = {
+  parser: "babel-eslint", // 解析器
+  extends: "airbnb", // 继承airbnb配置
+  env: {
+    browser: true,
+    node: true
+  },
+  // 修改规则
+  rules: {
+    semi: "error",
+    ...
+  }
+}
+```
