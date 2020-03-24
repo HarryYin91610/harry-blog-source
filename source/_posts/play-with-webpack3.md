@@ -23,6 +23,8 @@ rm -rf ./dist && webpack
 npm i -D clean-webpack-plugin
 ```
 
+<!--more-->
+
 webpack.config.js配置：
 ```
 module.exports = {
@@ -31,8 +33,6 @@ module.exports = {
   ]
 }
 ```
-
-<!--more-->
 
 -----------------------------------------
  
@@ -542,5 +542,215 @@ module.exports = {
     semi: "error",
     ...
   }
+}
+```
+
+-----------------------------------------
+ 
+## webpack打包库和组件
+
+### 例子：实现一个大整数加法库的打包
+
+**要求：**
+* 包含压缩版和非压缩版；
+* 支持AMD、CJS、ESM模块引入；
+* 也可以通过script标签引入，暴露全局变量。
+
+AMD引入：
+```
+require(['large-number'], function (largeNumber) {
+  largeNumber.add('999', '1');
+});
+```
+
+CJS引入：
+```
+const largeNumber = require('large-number');
+
+largeNumber.add('999', '1');
+```
+
+ESM引入：
+```
+import * as largeNumber from 'large-number';
+
+largeNumber.add('999', '1');
+```
+
+webpack.config.js配置：
+```
+module.exports = {
+  mode: 'none', // 禁止所有压缩
+  entry: {
+    'large-number': './src/index.js',
+    'large-number.min': './src/index.js'
+  },
+  output: {
+    filename: '[name].js',
+    library: 'largeNumber', // 指定库引用时的名称
+    libraryTarget: 'umd', // 支持库引入的方式
+    libraryExport: 'default' // 可以简化库的引用方式
+  },
+  // 只对.min文件进行压缩
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        include: /\.min\.js$/
+      })
+    ]
+  }
+}
+```
+
+**注意：压缩插件使用terser-webpack-plugin（webpack4在production模式下默认开启），可识别es6语法（优于uglifyjs）**
+
+设置入口文件，package.json内：
+```
+{
+  "main": "index.js",
+  "scripts": {
+    "prepublish": "webpack" // 发布npm包之前进行webpack打包
+  }
+}
+```
+
+根目录下新增index.js入口文件：
+```
+if (process.env.NODE_ENV = 'production') {
+  module.exports = require('./dist/large-number.min.js');
+} else {
+  module.exports = require('./dist/large-number.js')
+}
+```
+
+-----------------------------------------
+ 
+## webpack实现SSR打包
+
+### 理解服务端渲染（SSR）
+
+* 所有模板资源都存在服务端；
+* 内网机器拉取数据更快；
+* 一个HTML返回所有数据。
+
+**浏览器与服务端交互流程：**
+<img width="1000px" height="auto" style="float: left;" src="./play-with-webpack3/ssr1.png">
+<div style="clear: both"></div>
+
+不同渲染方式对比：
+
+||客户端渲染|服务端渲染|
+|------|------|------|
+|请求|多个请求（html、js、css、数据）|1个请求（纯SSR页面）| 
+|加载|串行加载|服务端并行加载|  
+|可交互|图片等静态资源加载完成，js逻辑执行完成即可交互|相同|
+
+优点总结：
+* 减少请求；（核心）
+* 减少白屏时间；
+* html模板内容丰富完整对SEO友好。
+
+### SSR实现思路
+
+服务端：
+* 使用react-dom/server下的renderToString方法将React组件渲染成字符串；
+* 服务端路由返回对应模板；
+
+客户端：
+* 打包出针对服务端的组件；
+
+### 解决服务端生成模板样式不显示的问题
+
+方案：
+* 使用打包出来的浏览器端html为模板；
+* 设置占位符，动态插入组件；
+
+原始模板添加占位符：
+```
+<div id="root"><!--HTML_PLACEHOLDER--></div>
+```
+
+替换为组件字符串：
+```
+const renderMarkup = (str) => {
+  return template.replace('<!--HTML_PLACEHOLDER--><', str);
+}
+```
+
+### 首屏数据
+同理，服务端获取数据替换占位符。
+
+-----------------------------------------
+ 
+## 优化构建时命令行的显示日志
+
+webpack.config.js配置：
+```
+module.exports = {
+  stats: 'errors-only'
+}
+```
+
+如果是dev环境，需要设置devServer：
+```
+module.exports = {
+  devServer: {
+    contentBase: './dist',
+    hot: true,
+    stats: 'errors-only'
+  }
+}
+```
+
+**使用friendly-errors-webpack-plugin优化构建日志，不同状态显示呈现不同颜色**
+
+* success：构建成功日志提示；
+* warning：构建警告日志提示；
+* error：构建报错日志提示；
+
+安装friendly-errors-webpack-plugin
+```
+npm i friendly-errors-webpack-plugin -D
+```
+
+webpack.config.js配置：
+```
+module.exports = {
+  plugins: [
+    new FriendlyErrorsWebpackPlugin()
+  ]
+}
+```
+
+-----------------------------------------
+ 
+## 构建异常和中断处理
+
+获取构建错误码：
+```
+echo $?
+```
+通过node.js中的process.exit抛出错误码：
+* 0 表示构建成功，回调函数中，err为null；
+* 非0表示执行失败，回调函数中，err不为null，err.code即传给exit的数字；
+
+主动捕获并处理构建错误
+* compiler每次构建结束后触发done这个hook；
+* process.exit主动处理构建错误；
+
+webpack.config.js配置：
+```
+module.exports = {
+  plugins: [
+    function () {
+      this.hooks.done.tap('done', (stats) => {
+        if (stats.compilation.errors && stats.compilation.errors.length && process.argv.indexOf('--watch') == -1) {
+          console.log('build error');
+          process.exit(1); // 修改错误码，并抛出
+        }
+      })
+    }
+  ]
 }
 ```
