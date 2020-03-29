@@ -272,3 +272,114 @@ npm i istanbul -D
   }
 }
 ```
+
+---------------------------------
+
+## 持续集成和Travis CI
+
+**核心：代码集成到主干之前，必须通过自动化测试，只要有一个测试用例失败，就无法集成。**
+
+有点：
+* 快速发现错误；
+* 防止分支大幅偏离主干；
+
+最流行的CI系统：Travis CI
+
+---------------------------------
+
+## npm构建包发布
+
+登录npm
+```
+npm login
+```
+
+升级版本：（运行npm version会自动打tag）
+```
+// 升级大版本
+npm version major
+// 升级小版本
+npm version minor
+// 升级补丁版本
+npm version patch
+```
+
+发布包
+```
+npm publish
+```
+
+---------------------------------
+
+## git commit规范 和 changelog生成
+
+**良好的git commit规范优势：**
+
+* 加快code review流程；
+* 根据git commit元数据生成changelog；
+* 便于后续维护者了解feature被修改的原因；
+
+### git提交格式
+
+<img width="1000px" height="auto" style="float: left;" src="./play-with-webpack4/gitcommit.png">
+<div style="clear: both"></div>
+
+**格式要求：**
+
+<img width="400px" height="auto" style="float: left;" src="./play-with-webpack4/commit-format.png">
+<div style="clear: both"></div>
+
+**type：代表某次提交的类型**
+* feat：新增feature；
+* fix：修复bug；
+* docs：仅修改文档；
+* style：仅修改空格、缩进等不改变代码逻辑；
+* refactor：代码重构，没有新增功能或修复bug；
+* perf：优化相关，性能或体验；
+* test：测试用例；
+* chore：改变构建流程，或增加依赖库、工具等；
+* revert：回滚到上一版本。
+
+**scope：作用域，修改范围；**
+**subject：概述提交目的；**
+**body：修改很大时，分行说明；**
+**footer：附上bug链接等；**
+
+### 本地开发阶段增加precommit钩子
+
+安装husky、validate-commit-msg、conventional-changelog-cli
+```
+npm i -D husky validate-commit-msg conventional-changelog-cli
+```
+
+校验配置：
+```
+// package.json
+
+{
+  "scripts": {
+    "commitmsg": "validate-commit-msg",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0"
+  }
+}
+```
+
+发布版本前，使用npm run changelog生成CHANGELOG.md文件
+
+---------------------------------
+
+## 语义化版本号
+
+**遵守semver规范，优势：**
+* 避免出现循环依赖；
+* 依赖冲突减少；
+
+### 版本号格式
+* 主版本号：做了不兼容的API修改；
+* 次版本号：做了向下兼容的功能新增；
+* 修订号：做了向下兼容的问题修正；
+
+### 先行版本号
+* alpha：内部测试版，不向外发布，有很多Bug，一般用于测试人员使用；
+* beta：测试版，会一直加入新功能，在alpha之后推出；
+* rc：（release candidate）发行候选版本，不会再加入新功能，主要用于除错；
