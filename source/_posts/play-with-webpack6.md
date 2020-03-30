@@ -247,4 +247,49 @@ Compilation Hooks（资源生成相关）：
 
 -------------------------------------
 
-## webpack构建流程：文件生成阶段
+## 动手实现一个简易webpack
+
+### 常见的几种模块化方式: 
+
+* ESM：静态分析，不能动态判断引入
+
+```
+import * as largeNumber from 'large-number';
+
+largeNumber.add('999', '1');
+```
+
+* CJS（commonJS）：node.js使用规范，可以动态引入模块
+
+```
+const largeNumber = require('large-number');
+
+largeNumber.add('999', '1');
+```
+
+* AMD
+
+```
+require(['large-number'], function (largeNumber) {
+  largeNumber.add('999', '1');
+})
+```
+
+### AST基础知识
+
+AST（abstract syntax tree）：语法树源代码的抽象语法结构的树状表现形式，树上每个节点都表示源代码的一种结构。
+
+[在线转AST](https://esprima.org/)
+
+### 简易webpack实现思路
+
+**ES6转ES5语法：**
+* 通过babylon生成AST；
+* 通过babel-core将AST生成ES5源代码；
+
+**分析模块之间的依赖：**
+* 通过babel-traverse的importDeclaration方法获取依赖属性；
+
+**生成js文件可在浏览器运行**
+
+[demo仓库](https://github.com/HarryYin91610/simplepack)
