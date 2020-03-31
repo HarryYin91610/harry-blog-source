@@ -153,3 +153,117 @@ Spritesmith.run({ src: sprites }, function handleResult (err, result) {
 ```
 
 [demo仓库](https://github.com/HarryYin91610/sprite-loader-demo)
+
+------------------------------------
+
+## 插件的基本结构
+
+插件没有loader那种独立的运行环境，只能在webpack里运行。
+
+基本结构：
+```
+class MyPlugin { // 插件名称
+  apply (compiler) { // 每个插件必须要有apply方法
+    compiler.hooks.done.tap('MyPlugin', (stats) => {
+      console.log('Hello World'); // 插件逻辑处理
+    });
+  }
+}
+
+module.exports = MyPlugin;
+```
+
+插件使用：
+```
+module.exports = {
+  plugins: [new MyPlugin()]
+}
+```
+
+------------------------------------
+
+## 复杂的插件开发场景
+
+### 插件通过其构造函数获取参数
+
+```
+module.exports = {
+  constructor (options) {
+    this.options = options;
+  }
+}
+```
+
+### 插件的错误处理
+
+* 参数校验阶段可以直接throw抛出
+```
+throw new Error('Error Message');
+```
+* 通过compilation对象的warnings和errors接收
+```
+compilation.warnings.push('warning');
+compilation.errors.push('error');
+```
+
+### 文件写入
+* 通过Compilation上的assets进行文件写入
+* 文件写入需要使用webpack-sources
+
+示例：
+```
+const { RawSource } = require('webpack-sources');
+
+module.exports = class DemoPlugin {
+  constructor (options) {
+    this.options = options;
+  }
+
+  apply (compiler) {
+    const { name } = this.options;
+    compiler.hooks.emit('plugin', (compilation, cb) => {
+      compilation.assets[name] = new RawSource('demo');
+      cb();
+    });
+  }
+};
+```
+
+### 插件扩展：插件的插件
+
+插件自身可以通过暴露hooks进行自身扩展
+
+示例：html-webpack-plugin
+```
+html-webpack-plugin-after-chunks
+html-webpack-plugin-before-html-generation
+html-webpack-plugin-after-assets-tags
+```
+
+------------------------------------
+
+## 实战：开发一个压缩构建资源生成zip包的插件
+
+**要求：**
+* 生成的zip包名可以通过插件传入；
+* 需要使用compiler对象上特定的hook进行资源生成；
+
+### 准备阶段
+
+#### 使用jszip将文件压缩为zip包
+```
+var zip = new JSZip();
+
+zip.file('hello.txt', 'Hello World\n');
+
+var img = zip.folder('images');
+img.file('smile.gif', imgData, {base64: true});
+```
+
+#### emit——Compiler上负责文件生成的hook
+
+emit是一个异步hook，读取的是compilation.assets对象的值。
+（我们可以将zip资源包设置到compilation.assets对象上）
+
+[deme仓库](https://github.com/HarryYin91610/zip-plugin)
+
