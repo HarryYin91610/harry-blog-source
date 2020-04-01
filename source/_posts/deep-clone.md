@@ -5,7 +5,7 @@ tags:
 - deepClone
 
 categories:
-- Algorithm
+- Practice
 ---
 
 ### 背景

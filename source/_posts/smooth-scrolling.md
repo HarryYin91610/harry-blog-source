@@ -6,7 +6,7 @@ tags:
 - scroll
 
 categories:
-- Algorithm
+- UX
 
 ---
 

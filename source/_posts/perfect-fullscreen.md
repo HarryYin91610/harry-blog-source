@@ -5,7 +5,7 @@ tags:
 - fullscreen
 
 categories:
-- Algorithm
+- UX
 
 ---
 

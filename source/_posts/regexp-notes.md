@@ -5,7 +5,7 @@ tags:
 - regular expression
 
 categories:
-- Algorithm
+- RegExp
 
 ---
 
