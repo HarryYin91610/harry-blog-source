@@ -14,6 +14,8 @@ categories:
 * querySelectorAll()：返回NodeList实例。
 * matchesSelector()：接收css选择符，如果调用元素与该选择符匹配则返回true。
 
+<!--more-->
+
 ## 元素遍历
 * childElementCount：返回子元素（不包括文本节点和注释）的个数。
 * firstElementChild：指向第一个子元素。
