@@ -2,8 +2,7 @@
 title: 时间复杂度与空间复杂度
 date: 2019-07-23 23:37:00
 tags:
-- 数据结构
-- 算法
+- algorithm
 
 categories:
 - Data Structure
